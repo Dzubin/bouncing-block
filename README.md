@@ -104,3 +104,7 @@ Everything adjustable is in `constants.h`:
 - `START_LIVES` - counter start value
 - `FRAME_MS` - frame delay
 - `COLOR_BG`, `COLOR_BALL`, `COLOR_PADDLE`, `COLOR_BORDER`, `SEG_ON`, `SEG_OFF` - colours
+
+## License
+
+MIT, see `LICENSE`. The vendored drivers from `picocalc-text-starter` by Blair Leduc keep their own license (see the `LICENSE` file that comes with them).
