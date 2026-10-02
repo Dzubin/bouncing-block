@@ -21,7 +21,8 @@ Sounds (0.2 s each): **800 Hz** on a side bounce, **600 Hz** on a paddle hit,
 Controls (PicoCalc keyboard):
 
 - **UP / DOWN** - move the paddle (tap to nudge, hold to slide; it coasts to a stop)
-- **ESC** - reboot into BOOTSEL (USB mass storage) mode at any time
+- **ESC** or **Q** - leave for the PicoCalc UF2 Loader menu (at any time, including the game over screen). If the game was flashed straight to the chip with no loader, it just restarts; on a PC it closes
+- **~** (SHIFT + backtick) - reboot into BOOTSEL (USB mass storage) mode at any time
 
 ## Files
 
@@ -85,8 +86,8 @@ Output: `bouncing-block-Linux` and `libSDL2-2.0.so.0` in the top-level folder.
 
 Hold **BOOTSEL**, plug the Pico into USB, copy `build/bouncing-block-<chip>.uf2` (`<chip>` is `RP2350` or `RP2040`, matching the board) to the
 `RPI-RP2` drive. The board reboots and the game starts. After that, pressing
-**ESC** drops back into BOOTSEL so you can copy a new `.uf2` without touching the
-board.
+**~** (SHIFT + backtick) drops back into BOOTSEL so you can copy a new `.uf2`
+without touching the board, and **ESC** or **Q** return to the UF2 Loader menu.
 
 ## Tweak
 

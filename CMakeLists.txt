@@ -66,6 +66,7 @@ target_link_libraries(bouncing-block
         pico_multicore
         pico_float
         hardware_spi
+        hardware_watchdog   # watchdog_reboot(): leaving for the UF2 Loader
         hardware_gpio
         hardware_i2c
         hardware_pio
@@ -91,6 +92,6 @@ pico_add_extra_outputs(bouncing-block)
 add_custom_command(TARGET bouncing-block POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
             $<TARGET_FILE_DIR:bouncing-block>/$<TARGET_FILE_BASE_NAME:bouncing-block>.uf2
-            /
+            ${CMAKE_CURRENT_LIST_DIR}/
 )
 

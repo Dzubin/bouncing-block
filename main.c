@@ -13,7 +13,9 @@
 //
 //  Controls (PicoCalc keyboard):
 //    UP / DOWN - move the paddle
-//    ESC       - reboot into BOOTSEL (USB mass storage) mode
+//    ESC or Q  - leave for the PicoCalc UF2 Loader menu (also on the game over
+//                screen)
+//    ~         - (SHIFT + backtick) reboot into BOOTSEL (USB mass storage) mode
 //
 //  Source layout:
 //    constants.h - every tunable value and colour
@@ -27,6 +29,7 @@
 
 #include "pico/stdlib.h"
 #include "pico/bootrom.h"
+#include "hardware/watchdog.h"
 
 #include "drivers/lcd.h"
 #include "drivers/keyboard.h"
@@ -38,6 +41,9 @@
 // Referenced by the keyboard driver (set when the Brk key is pressed). We do
 // not use it here, but the driver needs the symbol to link.
 volatile bool user_interrupt = false;
+
+static void exit_to_loader(void);
+static void check_exit_keys(unsigned char key);
 
 int main(void)
 {
@@ -83,9 +89,11 @@ int main(void)
         // ---- input ----
         while (keyboard_key_available())
         {
-            switch ((unsigned char)keyboard_get_key())
+            unsigned char key = (unsigned char)keyboard_get_key();
+
+            check_exit_keys(key);       // ~ and ESC / Q do not return
+            switch (key)
             {
-                case KEY_ESC:  audio_stop(); rom_reset_usb_boot(0, 0); break;
                 case KEY_UP:   paddle_vy -= PADDLE_ACCEL; break;
                 case KEY_DOWN: paddle_vy += PADDLE_ACCEL; break;
                 default: break;
@@ -165,7 +173,8 @@ int main(void)
                     beep_update();               // let the miss tone finish
                     tight_loop_contents();
                 }
-                keyboard_get_key();              // consume the restart key
+                check_exit_keys((unsigned char)keyboard_get_key());  // ~ and ESC / Q leave;
+                                                 // any other key is the restart key
                 audio_stop();
 
                 lives = START_LIVES;
@@ -210,5 +219,40 @@ int main(void)
 
         beep_update();          // silence any sound effect whose 0.2 s is up
         sleep_ms(FRAME_MS);
+    }
+}
+
+// Leaves the game for the PicoCalc UF2 Loader's menu: asks the loader for its
+// menu (see LOADER_COMMAND_MAGIC in constants.h) and reboots with the
+// watchdog. If the game was flashed straight to the chip with no loader,
+// nothing reads the request and it simply restarts. On the desktop build the
+// watchdog stand-in just closes the program.
+static void exit_to_loader(void)
+{
+    audio_stop();
+
+    watchdog_hw->scratch[LOADER_SCRATCH_MODE] = LOADER_BOOT_MODE_SD;
+    watchdog_hw->scratch[LOADER_SCRATCH_ARGUMENT] = 0;
+    watchdog_hw->scratch[LOADER_SCRATCH_MAGIC] = LOADER_COMMAND_MAGIC;
+    watchdog_reboot(0, 0, LOADER_REBOOT_DELAY_MS);
+
+    while (true)
+    {
+        tight_loop_contents();      // the reboot comes in a few milliseconds
+    }
+}
+
+// The keys that leave the game: ESC or Q go back to the UF2 Loader, ~ (SHIFT +
+// backtick) reboots into BOOTSEL. Neither returns; any other key does.
+static void check_exit_keys(unsigned char key)
+{
+    if (key == '~')
+    {
+        audio_stop();
+        rom_reset_usb_boot(0, 0);
+    }
+    else if (key == KEY_ESC || key == 'q' || key == 'Q')
+    {
+        exit_to_loader();
     }
 }
